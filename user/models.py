@@ -18,19 +18,15 @@ def rand_slug():
 
 
 class CustomAccountManager(BaseUserManager):
-    def create_user(self, email, first_name, last_name, password, **other_fields):
+    def create_user(self, nome, last_name, password, **other_fields):
 
-        if not email:
-            raise ValueError(_('You must provide an email address'))
-
-        email = self.normalize_email(email)
-        user = self.model(email=email, first_name=first_name,
+        user = self.model(nome=nome,
                           last_name=last_name, **other_fields)
         user.set_password(password)
         user.save()
         return user
 
-    def create_superuser(self, email, first_name, last_name, password, **other_fields):
+    def create_superuser(self, nome, last_name, password, **other_fields):
 
         other_fields.setdefault('is_staff', True)
         other_fields.setdefault('is_superuser', True)
@@ -43,12 +39,11 @@ class CustomAccountManager(BaseUserManager):
             raise ValueError(
                 'Superuser must be assigned to is_superuser=True.')
 
-        return self.create_user(email, first_name, last_name, password, **other_fields)
+        return self.create_user(nome, last_name, password, **other_fields)
 
 
 class Funcionario(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(_('email address'), unique=True)
-    first_name = models.CharField(max_length=100)
+    nome = models.CharField(max_length=100, unique=True)
     last_name = models.CharField(max_length=100)
     profile_pic = models.ImageField(
         upload_to='users/', default='users/default.png')
@@ -68,11 +63,11 @@ class Funcionario(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomAccountManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    USERNAME_FIELD = 'nome'
+    REQUIRED_FIELDS = ['last_name']
 
     def __str__(self):
-        return f'{self.first_name} {self.last_name}'
+        return f'{self.nome} {self.last_name}'
 
     def get_absolute_url(self):
         return reverse('users:user_detail', args=[self.slug])
@@ -91,7 +86,7 @@ class Funcionario(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(rand_slug() + "-" + self.email)
+            self.slug = slugify(rand_slug() + "-")
         super(Funcionario, self).save(*args, **kwargs)
 
 class Holerite(models.Model):
